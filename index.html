@@ -13,8 +13,19 @@
             margin: 0;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        function loadMarkdownFile() {
+            fetch('洛谷题单463735补题.md')
+                .then(response => response.text())
+                .then(markdown => {
+                    const html = marked(markdown);
+                    document.getElementById('markdown-content').innerHTML = html;
+                });
+        }
+    </script>
 </head>
-    <bodyh>
+    <body onload="loadMarkdownFile()">
         <div style="
             background-color:#f1f1f1;
             text-align: center;
@@ -22,11 +33,7 @@
             "   
             width=auto height=auto >
         </div>
-        <iframe src="洛谷题单463735补题.md" style="
-            text-align: center;
-            margin auto auto;
-        ">
-        </iframe>
+        <div id="markdown-content"></div>
         <div style="
             background-color:#f1f1f1;
             text-align: center;
