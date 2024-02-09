@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <title>
+        sunlight's blog
+    </title>
+    <style>  
+        body
+        {
+            margin: 0;
+        }
+    </style>
+</head>
+    <body>
+        <div style="
+            background-color:#f1f1f1;
+            text-align: center;
+            padding: 40px;
+            "   
+            width=auto height=auto >
+        </div>
+        //article
+        <h1 id="-463735-">洛谷题单463735补题</h1>
+        <h2 id="-">介绍</h2>
+        <p>主要是一些有关最大子段和的题目，不过到后面感觉有些偏离主题，题单一共9道，洛谷只有8道，毒瘤SPOJ看不到数据，只能自己看题解或讨论区的hack进行调试。</p>
+        <h2 id="-">题解</h2>
+        <h3 id="gss1">GSS1</h3>
+        <p>线段树维护最大子段和的模板。线段树上每个节点维护最大前缀和、最大后缀和和最大字段和即可。需要注意非空限制，没什么细节（但是这个弱智看错了范围，没有一遍过，可以退役了）。</p>
+        <pre><code class="lang-cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span><span class="hljs-meta-string">&lt;bits/stdc++.h&gt;</span></span>
+        <span class="hljs-keyword">using</span> <span class="hljs-keyword">namespace</span> <span class="hljs-built_in">std</span>;
+        <span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span> N=<span class="hljs-number">1e5</span>+<span class="hljs-number">10</span>;
+        <span class="hljs-keyword">int</span> n,a[N],q;
+        <span class="hljs-keyword">struct</span> TREE{
+            <span class="hljs-keyword">int</span> L,R,mx,sum;
+        }tree[N*<span class="hljs-number">4</span>];
+        <span class="hljs-built_in">vector</span>&lt;TREE&gt;v;
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">lson</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r)</span>
+        </span>{
+            <span class="hljs-keyword">return</span> (l+r)/<span class="hljs-number">2</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">rson</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r)</span>
+        </span>{
+            <span class="hljs-keyword">return</span> (l+r)/<span class="hljs-number">2</span>+<span class="hljs-number">1</span>;
+        }
+        <span class="hljs-function">TREE <span class="hljs-title">merge</span><span class="hljs-params">(TREE x,TREE y)</span>
+        </span>{
+            TREE nw={INT_MIN,INT_MIN,INT_MIN,<span class="hljs-number">0</span>};
+            nw.sum=x.sum+y.sum;
+            nw.L=max(x.L,x.sum+y.L);
+            nw.R=max(y.R,y.sum+x.R);
+            nw.mx=max(max(x.mx,y.mx),max(nw.L,nw.R));
+            nw.mx=max(max(nw.mx,x.R+y.L),max(x.R,y.L));
+            <span class="hljs-keyword">return</span> nw;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">build</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r,<span class="hljs-keyword">int</span> x)</span>
+        </span>{
+            <span class="hljs-keyword">if</span>(l==r)
+            {
+                tree[x].L=tree[x].R=tree[x].mx=tree[x].sum=a[l];
+                <span class="hljs-keyword">return</span>;    
+            }
+            build(l,lson(l,r),x*<span class="hljs-number">2</span>);
+            build(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>);
+            tree[x]=merge(tree[x*<span class="hljs-number">2</span>],tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>]);
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">query</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r,<span class="hljs-keyword">int</span> x,<span class="hljs-keyword">int</span> l1,<span class="hljs-keyword">int</span> r1)</span>
+        </span>{
+            <span class="hljs-keyword">if</span>(l&gt;=l1&amp;&amp;r&lt;=r1)
+            {
+                <span class="hljs-keyword">if</span>(v.size()==<span class="hljs-number">0</span>)
+                v.push_back(tree[x]);
+                <span class="hljs-keyword">else</span>
+                {
+                    TREE node=v[<span class="hljs-number">0</span>];
+                    v.pop_back();
+                    v.push_back(merge(node,tree[x]));
+                }
+                <span class="hljs-keyword">return</span>;
+            }
+            <span class="hljs-keyword">if</span>(lson(l,r)&gt;=l1)
+            query(l,lson(l,r),x*<span class="hljs-number">2</span>,l1,r1);
+            <span class="hljs-keyword">if</span>(rson(l,r)&lt;=r1)
+            query(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>,l1,r1);
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>
+        </span>{
+            ios::sync_with_stdio(<span class="hljs-number">0</span>);
+            <span class="hljs-built_in">cin</span>.tie(<span class="hljs-number">0</span>),<span class="hljs-built_in">cout</span>.tie(<span class="hljs-number">0</span>);
+            <span class="hljs-built_in">cin</span>&gt;&gt;n;
+            <span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i=<span class="hljs-number">1</span>;i&lt;=n;i++)
+            {
+                <span class="hljs-built_in">cin</span>&gt;&gt;a[i];
+            }
+            build(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>);
+            <span class="hljs-built_in">cin</span>&gt;&gt;q;
+            <span class="hljs-keyword">while</span>(q--)
+            {
+                <span class="hljs-keyword">int</span> l,r;
+                <span class="hljs-built_in">cin</span>&gt;&gt;l&gt;&gt;r;
+                v.clear();
+                query(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,l,r);
+                <span class="hljs-built_in">cout</span>&lt;&lt;v[<span class="hljs-number">0</span>].mx&lt;&lt;<span class="hljs-string">'\n'</span>;
+            }
+            <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+        }
+        </code></pre>
+        <h3 id="gss2">GSS2</h3>
+        <p>本题的最大字段和有去重限制，以我们两年半的OI（tijie）经验不难想到这个限制难以用ds维护。</p>
+        <p>考虑将询问离线并按照右端点排序，每次往里面加数的时候：</p>
+        <p>设当前位置为 $i$，加的数为 $x$，上一次出现位置为 $lst[x]$（没出现则为0）。则会受到影响的，只有左端点在区间 $[lst[x]+1,i]$ 的区间。具体而言，每次加数操作会产生若干个对答案有影响的新区间 $[lst[x]+1\ to\ i,i]$。</p>
+        <p>我们用维护区间 $[x,x]$ 的线段树节点维护当前左端点为 $x$ 的区间的最大值。加数操作等价于给区间 $[lst[x]+1,i]$ 加 $x$。查询操作等价于查询当前区间 $[l,r]$ 的历史最大值。考虑如何维护：</p>
+        <p>考虑道区间加的懒标记并不是实时下传的，我们定义上一次下传的时间为 $l$，当前正在下传懒标记的时间为 $r$，时刻 $x$ 加了 $a<em>x$。则 $l$ 时刻的答案 $ans$ 在这段时间内的变化是 $ans+\sum</em>{j=l+1}^ia[j]|l+1\le i\le r$。则容易发现该段时间对答案有影响的值应该为 $ans+\max_{j=l+1}^ia[j]|l+1\le i\le r$ 。即为原答案与懒标记历史最大值的和，懒标记历史最大值可以额外开一个变量贪心维护，更多细节见代码吧。</p>
+        <pre><code class="lang-cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span><span class="hljs-meta-string">&lt;bits/stdc++.h&gt;</span></span>
+        <span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> int long long</span>
+        <span class="hljs-keyword">using</span> <span class="hljs-keyword">namespace</span> <span class="hljs-built_in">std</span>;
+        <span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span> N=<span class="hljs-number">1e5</span>+<span class="hljs-number">10</span>;
+        <span class="hljs-built_in">map</span>&lt;<span class="hljs-keyword">int</span>,<span class="hljs-keyword">int</span>&gt;mp;
+        <span class="hljs-keyword">int</span> n,a[N],lst[N],q,ans[N];
+        <span class="hljs-keyword">struct</span> query{
+            <span class="hljs-keyword">int</span> l,r,id;
+        }b[N];
+        <span class="hljs-keyword">struct</span> TREE{
+            <span class="hljs-keyword">int</span> mx,nw,tagadd,tagmx;
+        }tree[N*<span class="hljs-number">4</span>];
+        <span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">cmp</span><span class="hljs-params">(query x,query y)</span>
+        </span>{
+            <span class="hljs-keyword">return</span> x.r&lt;y.r;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">lson</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r)</span>
+        </span>{
+            <span class="hljs-keyword">return</span> (l+r)/<span class="hljs-number">2</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">rson</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r)</span>
+        </span>{
+            <span class="hljs-keyword">return</span> (l+r)/<span class="hljs-number">2</span>+<span class="hljs-number">1</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">update</span><span class="hljs-params">(<span class="hljs-keyword">int</span> x)</span>
+        </span>{
+            tree[x].nw=max(tree[x*<span class="hljs-number">2</span>].nw,tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].nw);
+            tree[x].mx=max(tree[x].nw,max(tree[x*<span class="hljs-number">2</span>].mx,tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].mx));
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">pushdown</span><span class="hljs-params">(<span class="hljs-keyword">int</span> x)</span>
+        </span>{
+            tree[x*<span class="hljs-number">2</span>].mx=max(tree[x*<span class="hljs-number">2</span>].mx,tree[x*<span class="hljs-number">2</span>].nw+tree[x].tagmx);
+            tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].mx=max(tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].mx,tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].nw+tree[x].tagmx);
+            tree[x*<span class="hljs-number">2</span>].tagmx=max(tree[x*<span class="hljs-number">2</span>].tagmx,tree[x*<span class="hljs-number">2</span>].tagadd+tree[x].tagmx);
+            tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].tagmx=max(tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].tagmx,tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].tagadd+tree[x].tagmx);
+            tree[x].tagmx=<span class="hljs-number">0</span>;
+            tree[x*<span class="hljs-number">2</span>].nw+=tree[x].tagadd;
+            tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].nw+=tree[x].tagadd;
+            tree[x*<span class="hljs-number">2</span>].tagadd+=tree[x].tagadd;
+            tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].tagadd+=tree[x].tagadd;
+            tree[x].tagadd=<span class="hljs-number">0</span>;
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">add</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r,<span class="hljs-keyword">int</span> x,<span class="hljs-keyword">int</span> l1,<span class="hljs-keyword">int</span> r1,<span class="hljs-keyword">int</span> to)</span>
+        </span>{
+            <span class="hljs-keyword">if</span>(l&gt;=l1&amp;&amp;r&lt;=r1)
+            {
+                tree[x].nw+=to;
+                tree[x].tagadd+=to;
+                tree[x].tagmx=max(tree[x].tagmx,tree[x].tagadd);
+                tree[x].mx=max(tree[x].mx,tree[x].nw);
+                <span class="hljs-keyword">return</span>;
+            }
+            pushdown(x);
+            <span class="hljs-keyword">if</span>(lson(l,r)&gt;=l1)
+            add(l,lson(l,r),x*<span class="hljs-number">2</span>,l1,r1,to);
+            <span class="hljs-keyword">if</span>(rson(l,r)&lt;=r1)
+            add(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>,l1,r1,to);
+            update(x);
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">get</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r,<span class="hljs-keyword">int</span> x,<span class="hljs-keyword">int</span> l1,<span class="hljs-keyword">int</span> r1)</span>
+        </span>{
+            <span class="hljs-keyword">if</span>(l&gt;=l1&amp;&amp;r&lt;=r1)
+            {
+                <span class="hljs-keyword">return</span> tree[x].mx;
+            }
+            pushdown(x);
+            <span class="hljs-keyword">int</span> s=<span class="hljs-number">0</span>;
+            <span class="hljs-keyword">if</span>(lson(l,r)&gt;=l1)
+            s=max(s,get(l,lson(l,r),x*<span class="hljs-number">2</span>,l1,r1));
+            <span class="hljs-keyword">if</span>(rson(l,r)&lt;=r1)
+            s=max(s,get(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>,l1,r1));
+            update(x);
+            <span class="hljs-keyword">return</span> s;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">signed</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>
+        </span>{
+            ios::sync_with_stdio(<span class="hljs-number">0</span>);
+            <span class="hljs-built_in">cin</span>.tie(<span class="hljs-number">0</span>),<span class="hljs-built_in">cout</span>.tie(<span class="hljs-number">0</span>);
+            <span class="hljs-built_in">cin</span>&gt;&gt;n;
+            <span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i=<span class="hljs-number">1</span>;i&lt;=n;i++)
+            {
+                <span class="hljs-built_in">cin</span>&gt;&gt;a[i];
+                lst[i]=mp[a[i]];
+                mp[a[i]]=i;
+            }
+            <span class="hljs-built_in">cin</span>&gt;&gt;q;
+            <span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i=<span class="hljs-number">1</span>;i&lt;=q;i++)
+            {
+                <span class="hljs-built_in">cin</span>&gt;&gt;b[i].l&gt;&gt;b[i].r;
+                b[i].id=i;
+            }
+            sort(b+<span class="hljs-number">1</span>,b+<span class="hljs-number">1</span>+q,cmp);
+            <span class="hljs-keyword">int</span> z=<span class="hljs-number">0</span>;
+            <span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i=<span class="hljs-number">1</span>;i&lt;=q;i++)
+            {
+                <span class="hljs-keyword">while</span>(z&lt;b[i].r)
+                {
+                    z++;
+                    add(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,lst[z]+<span class="hljs-number">1</span>,z,a[z]);
+                }
+                ans[b[i].id]=get(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,b[i].l,b[i].r);
+            }
+            <span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i=<span class="hljs-number">1</span>;i&lt;=q;i++)
+            {
+                <span class="hljs-built_in">cout</span>&lt;&lt;ans[i]&lt;&lt;<span class="hljs-string">'\n'</span>;
+            }
+            <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+        }
+        </code></pre>
+        <h3 id="gss3">GSS3</h3>
+        <p>加了个单点改，没什么新意，跟GSS1一样，直接看代码吧。</p>
+        <pre><code class="lang-cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span><span class="hljs-meta-string">&lt;bits/stdc++.h&gt;</span></span>
+        <span class="hljs-keyword">using</span> <span class="hljs-keyword">namespace</span> <span class="hljs-built_in">std</span>;
+        <span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span> N=<span class="hljs-number">1e5</span>+<span class="hljs-number">10</span>;
+        <span class="hljs-keyword">int</span> n,a[N],q;
+        <span class="hljs-keyword">struct</span> TREE{
+            <span class="hljs-keyword">int</span> L,R,mx,sum;
+        }tree[N*<span class="hljs-number">4</span>];
+        <span class="hljs-built_in">vector</span>&lt;TREE&gt;v;
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">lson</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r)</span>
+        </span>{
+            <span class="hljs-keyword">return</span> (l+r)/<span class="hljs-number">2</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">rson</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r)</span>
+        </span>{
+            <span class="hljs-keyword">return</span> (l+r)/<span class="hljs-number">2</span>+<span class="hljs-number">1</span>;
+        }
+        <span class="hljs-function">TREE <span class="hljs-title">merge</span><span class="hljs-params">(TREE x,TREE y)</span>
+        </span>{
+            TREE nw={INT_MIN,INT_MIN,INT_MIN,<span class="hljs-number">0</span>};
+            nw.sum=x.sum+y.sum;
+            nw.L=max(x.L,x.sum+y.L);
+            nw.R=max(y.R,y.sum+x.R);
+            nw.mx=max(max(x.mx,y.mx),max(nw.L,nw.R));
+            nw.mx=max(max(nw.mx,x.R+y.L),max(x.R,y.L));
+            <span class="hljs-keyword">return</span> nw;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">build</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r,<span class="hljs-keyword">int</span> x)</span>
+        </span>{
+            <span class="hljs-keyword">if</span>(l==r)
+            {
+                tree[x].L=tree[x].R=tree[x].mx=tree[x].sum=a[l];
+                <span class="hljs-keyword">return</span>;    
+            }
+            build(l,lson(l,r),x*<span class="hljs-number">2</span>);
+            build(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>);
+            tree[x]=merge(tree[x*<span class="hljs-number">2</span>],tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>]);
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">query</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r,<span class="hljs-keyword">int</span> x,<span class="hljs-keyword">int</span> l1,<span class="hljs-keyword">int</span> r1)</span>
+        </span>{
+            <span class="hljs-keyword">if</span>(l&gt;=l1&amp;&amp;r&lt;=r1)
+            {
+                <span class="hljs-keyword">if</span>(v.size()==<span class="hljs-number">0</span>)
+                v.push_back(tree[x]);
+                <span class="hljs-keyword">else</span>
+                {
+                    TREE node=v[<span class="hljs-number">0</span>];
+                    v.pop_back();
+                    v.push_back(merge(node,tree[x]));
+                }
+                <span class="hljs-keyword">return</span>;
+            }
+            <span class="hljs-keyword">if</span>(lson(l,r)&gt;=l1)
+            query(l,lson(l,r),x*<span class="hljs-number">2</span>,l1,r1);
+            <span class="hljs-keyword">if</span>(rson(l,r)&lt;=r1)
+            query(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>,l1,r1);
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">change</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r,<span class="hljs-keyword">int</span> x,<span class="hljs-keyword">int</span> to,<span class="hljs-keyword">int</span> w)</span>
+        </span>{
+            <span class="hljs-keyword">if</span>(l==r)
+            {
+                tree[x].L=tree[x].R=tree[x].mx=tree[x].sum=w;
+                <span class="hljs-keyword">return</span>;
+            }
+            <span class="hljs-keyword">if</span>(lson(l,r)&gt;=to)
+            change(l,lson(l,r),x*<span class="hljs-number">2</span>,to,w);
+            <span class="hljs-keyword">else</span>
+            change(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>,to,w);
+            tree[x]=merge(tree[x*<span class="hljs-number">2</span>],tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>]);
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>
+        </span>{
+            ios::sync_with_stdio(<span class="hljs-number">0</span>);
+            <span class="hljs-built_in">cin</span>.tie(<span class="hljs-number">0</span>),<span class="hljs-built_in">cout</span>.tie(<span class="hljs-number">0</span>);
+            <span class="hljs-built_in">cin</span>&gt;&gt;n;
+            <span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i=<span class="hljs-number">1</span>;i&lt;=n;i++)
+            {
+                <span class="hljs-built_in">cin</span>&gt;&gt;a[i];
+            }
+            build(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>);
+            <span class="hljs-built_in">cin</span>&gt;&gt;q;
+            <span class="hljs-keyword">while</span>(q--)
+            {
+                <span class="hljs-keyword">int</span> op;
+                <span class="hljs-built_in">cin</span>&gt;&gt;op;
+                <span class="hljs-keyword">if</span>(op==<span class="hljs-number">0</span>)
+                {
+                    <span class="hljs-keyword">int</span> x,y;
+                    <span class="hljs-built_in">cin</span>&gt;&gt;x&gt;&gt;y;
+                    change(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,x,y);
+                }
+                <span class="hljs-keyword">else</span>
+                {
+                    <span class="hljs-keyword">int</span> l,r;
+                    <span class="hljs-built_in">cin</span>&gt;&gt;l&gt;&gt;r;
+                    v.clear();
+                    query(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,l,r);
+                    <span class="hljs-built_in">cout</span>&lt;&lt;v[<span class="hljs-number">0</span>].mx&lt;&lt;<span class="hljs-string">'\n'</span>;
+                }
+            }
+            <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+        }
+        </code></pre>
+        <h3 id="gss4">GSS4</h3>
+        <p>考虑到一个数变为1之后就不会下降，被开方的有效次数非常有限。因此直接线段树上暴力修改求和即可，如果一个区间的和等于它的长度（全为1），就不递归。本题保证了正整数，否则要考虑0的情况，我直接偷懒了。</p>
+        <pre><code class="lang-cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span><span class="hljs-meta-string">&lt;bits/stdc++.h&gt;</span></span>
+        <span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> int long long</span>
+        <span class="hljs-keyword">using</span> <span class="hljs-keyword">namespace</span> <span class="hljs-built_in">std</span>;
+        <span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span> N=<span class="hljs-number">1e5</span>+<span class="hljs-number">10</span>;
+        <span class="hljs-keyword">int</span> n,a[N],t,q;
+        <span class="hljs-keyword">struct</span> TREE{
+            <span class="hljs-keyword">int</span> s,len;
+        }tree[N*<span class="hljs-number">4</span>];
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">lson</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r)</span>
+        </span>{
+            <span class="hljs-keyword">return</span> (l+r)/<span class="hljs-number">2</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">rson</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r)</span>
+        </span>{
+            <span class="hljs-keyword">return</span> (l+r)/<span class="hljs-number">2</span>+<span class="hljs-number">1</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">update</span><span class="hljs-params">(<span class="hljs-keyword">int</span> x)</span>
+        </span>{
+            tree[x].s=tree[x*<span class="hljs-number">2</span>].s+tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].s;
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">build</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r,<span class="hljs-keyword">int</span> x)</span>
+        </span>{
+            tree[x].len=r-l+<span class="hljs-number">1</span>;
+            <span class="hljs-keyword">if</span>(l==r)
+            {
+                tree[x].s=a[l];
+                <span class="hljs-keyword">return</span>;
+            }
+            build(l,lson(l,r),x*<span class="hljs-number">2</span>);
+            build(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>);
+            update(x);
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">change</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r,<span class="hljs-keyword">int</span> x,<span class="hljs-keyword">int</span> l1,<span class="hljs-keyword">int</span> r1)</span>
+        </span>{
+            <span class="hljs-keyword">if</span>(tree[x].s==tree[x].len)
+            <span class="hljs-keyword">return</span>;
+            <span class="hljs-keyword">if</span>(l==r)
+            {
+                tree[x].s=<span class="hljs-built_in">sqrt</span>(tree[x].s);
+                <span class="hljs-keyword">return</span>;
+            }
+            <span class="hljs-keyword">if</span>(lson(l,r)&gt;=l1)
+            change(l,lson(l,r),x*<span class="hljs-number">2</span>,l1,r1);
+            <span class="hljs-keyword">if</span>(rson(l,r)&lt;=r1)
+            change(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>,l1,r1);
+            update(x);
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">query</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r,<span class="hljs-keyword">int</span> x,<span class="hljs-keyword">int</span> l1,<span class="hljs-keyword">int</span> r1)</span>
+        </span>{
+            <span class="hljs-keyword">if</span>(l&gt;=l1&amp;&amp;r&lt;=r1)
+            {
+                <span class="hljs-keyword">return</span> tree[x].s;
+            }
+            <span class="hljs-keyword">int</span> sum=<span class="hljs-number">0</span>;
+            <span class="hljs-keyword">if</span>(lson(l,r)&gt;=l1)
+            sum+=query(l,lson(l,r),x*<span class="hljs-number">2</span>,l1,r1);
+            <span class="hljs-keyword">if</span>(rson(l,r)&lt;=r1)
+            sum+=query(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>,l1,r1);
+            <span class="hljs-keyword">return</span> sum;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">signed</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>
+        </span>{
+            ios::sync_with_stdio(<span class="hljs-number">0</span>);
+            <span class="hljs-built_in">cin</span>.tie(<span class="hljs-number">0</span>),<span class="hljs-built_in">cout</span>.tie(<span class="hljs-number">0</span>);
+            <span class="hljs-keyword">while</span>(<span class="hljs-built_in">cin</span>&gt;&gt;n)
+            {
+                t++;
+                <span class="hljs-built_in">cout</span>&lt;&lt;<span class="hljs-string">"Case #"</span>&lt;&lt;t&lt;&lt;<span class="hljs-string">":"</span>&lt;&lt;<span class="hljs-string">'\n'</span>;
+                <span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i=<span class="hljs-number">1</span>;i&lt;=n;i++)
+                {
+                    <span class="hljs-built_in">cin</span>&gt;&gt;a[i];
+                }
+                build(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>);
+                <span class="hljs-built_in">cin</span>&gt;&gt;q;
+                <span class="hljs-keyword">while</span>(q--)
+                {
+                    <span class="hljs-keyword">int</span> op;
+                    <span class="hljs-built_in">cin</span>&gt;&gt;op;
+                    <span class="hljs-keyword">if</span>(op==<span class="hljs-number">0</span>)
+                    {
+                        <span class="hljs-keyword">int</span> l,r;
+                        <span class="hljs-built_in">cin</span>&gt;&gt;l&gt;&gt;r;
+                        <span class="hljs-keyword">if</span>(l&gt;r)
+                        swap(l,r);
+                        change(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,l,r);
+                    }
+                    <span class="hljs-keyword">else</span>
+                    {
+                        <span class="hljs-keyword">int</span> l,r;
+                        <span class="hljs-built_in">cin</span>&gt;&gt;l&gt;&gt;r;
+                        <span class="hljs-keyword">if</span>(l&gt;r)
+                        swap(l,r);
+                        <span class="hljs-built_in">cout</span>&lt;&lt;query(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,l,r)&lt;&lt;<span class="hljs-string">'\n'</span>;
+                    }
+                }
+                <span class="hljs-built_in">cout</span>&lt;&lt;<span class="hljs-string">'\n'</span>;
+            }
+            <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+        }
+        </code></pre>
+        <h3 id="gss5">GSS5</h3>
+        <p>考虑简单的情况：$y_1&lt;x_2$ 时，显然原问题等于区间 $[y_1+1,x_2-1]$ 的和加上 $[x_1,y_1]$ 的最大后缀和，$[x_2,y_2]$ 的最大前缀和。</p>
+        <p>但是如何重叠的话就很麻烦，本题又要求不重，稍有不慎可能就变成大分讨了。</p>
+        <p>仔细想一想就是下面三种：</p>
+        <p>1.$[x_1,x_2]$ 的最大后缀和+$[x_2,y_2]$ 的最大后缀和-$a[x_2]$。</p>
+        <p>2.$[x_1,y_1]$ 的最大后缀和+$[y_1,y_2]$ 的最大后缀和-$a[y_1]$。</p>
+        <p>3.$[x_2,y_1]$ 的最大字段和。</p>
+        <p>1，2的共端点很巧妙。</p>
+        <pre><code class="lang-cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span><span class="hljs-meta-string">&lt;bits/stdc++.h&gt;</span></span>
+        <span class="hljs-keyword">using</span> <span class="hljs-keyword">namespace</span> <span class="hljs-built_in">std</span>;
+        <span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span> N=<span class="hljs-number">1e5</span>+<span class="hljs-number">10</span>;
+        <span class="hljs-keyword">int</span> n,a[N],q,t,qz[N];
+        <span class="hljs-keyword">struct</span> TREE{
+            <span class="hljs-keyword">int</span> L,R,mx,sum;
+        }tree[N*<span class="hljs-number">4</span>];
+        <span class="hljs-built_in">vector</span>&lt;TREE&gt;v;
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">lson</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r)</span>
+        </span>{
+            <span class="hljs-keyword">return</span> (l+r)/<span class="hljs-number">2</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">rson</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r)</span>
+        </span>{
+            <span class="hljs-keyword">return</span> (l+r)/<span class="hljs-number">2</span>+<span class="hljs-number">1</span>;
+        }
+        <span class="hljs-function">TREE <span class="hljs-title">merge</span><span class="hljs-params">(TREE x,TREE y)</span>
+        </span>{
+            TREE nw={INT_MIN,INT_MIN,INT_MIN,<span class="hljs-number">0</span>};
+            nw.sum=x.sum+y.sum;
+            nw.L=max(x.L,x.sum+y.L);
+            nw.R=max(y.R,y.sum+x.R);
+            nw.mx=max(max(x.mx,y.mx),max(nw.L,nw.R));
+            nw.mx=max(max(nw.mx,x.R+y.L),max(x.R,y.L));
+            <span class="hljs-keyword">return</span> nw;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">build</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r,<span class="hljs-keyword">int</span> x)</span>
+        </span>{
+            <span class="hljs-keyword">if</span>(l==r)
+            {
+                tree[x].L=tree[x].R=tree[x].mx=tree[x].sum=a[l];
+                <span class="hljs-keyword">return</span>;    
+            }
+            build(l,lson(l,r),x*<span class="hljs-number">2</span>);
+            build(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>);
+            tree[x]=merge(tree[x*<span class="hljs-number">2</span>],tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>]);
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">query</span><span class="hljs-params">(<span class="hljs-keyword">int</span> l,<span class="hljs-keyword">int</span> r,<span class="hljs-keyword">int</span> x,<span class="hljs-keyword">int</span> l1,<span class="hljs-keyword">int</span> r1)</span>
+        </span>{
+            <span class="hljs-keyword">if</span>(l&gt;=l1&amp;&amp;r&lt;=r1)
+            {
+                <span class="hljs-keyword">if</span>(v.size()==<span class="hljs-number">0</span>)
+                v.push_back(tree[x]);
+                <span class="hljs-keyword">else</span>
+                {
+                    TREE node=v[<span class="hljs-number">0</span>];
+                    v.pop_back();
+                    v.push_back(merge(node,tree[x]));
+                }
+                <span class="hljs-keyword">return</span>;
+            }
+            <span class="hljs-keyword">if</span>(lson(l,r)&gt;=l1)
+            query(l,lson(l,r),x*<span class="hljs-number">2</span>,l1,r1);
+            <span class="hljs-keyword">if</span>(rson(l,r)&lt;=r1)
+            query(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>,l1,r1);
+            <span class="hljs-keyword">return</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>
+        </span>{
+            ios::sync_with_stdio(<span class="hljs-number">0</span>);
+            <span class="hljs-built_in">cin</span>.tie(<span class="hljs-number">0</span>),<span class="hljs-built_in">cout</span>.tie(<span class="hljs-number">0</span>);
+            <span class="hljs-built_in">cin</span>&gt;&gt;t;
+            <span class="hljs-keyword">while</span>(t--)
+            {
+                <span class="hljs-built_in">cin</span>&gt;&gt;n;
+                <span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i=<span class="hljs-number">1</span>;i&lt;=n;i++)
+                {
+                    <span class="hljs-built_in">cin</span>&gt;&gt;a[i];
+                    qz[i]=qz[i<span class="hljs-number">-1</span>]+a[i];
+                }
+                build(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>);
+                <span class="hljs-built_in">cin</span>&gt;&gt;q;
+                <span class="hljs-keyword">while</span>(q--)
+                {
+                    <span class="hljs-keyword">int</span> l1,r1,l2,r2;
+                    <span class="hljs-built_in">cin</span>&gt;&gt;l1&gt;&gt;r1&gt;&gt;l2&gt;&gt;r2;
+                    <span class="hljs-keyword">if</span>(r1&lt;l2)
+                    {
+                        v.clear();
+                        query(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,l1,r1);
+                        <span class="hljs-keyword">int</span> ans1=v[<span class="hljs-number">0</span>].R;
+                        v.clear();
+                        query(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,l2,r2);
+                        <span class="hljs-keyword">int</span> ans2=v[<span class="hljs-number">0</span>].L;
+                        <span class="hljs-built_in">cout</span>&lt;&lt;ans1+ans2+qz[l2<span class="hljs-number">-1</span>]-qz[r1]&lt;&lt;<span class="hljs-string">'\n'</span>;
+                    }
+                    <span class="hljs-keyword">else</span>
+                    {
+                        <span class="hljs-keyword">int</span> ans=INT_MIN,ans1,ans2;
+                        v.clear();
+                        query(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,l2,r1);
+                        ans=max(ans,v[<span class="hljs-number">0</span>].mx);<span class="hljs-comment">//3</span>
+                        v.clear();
+                        query(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,l1,r1);
+                        ans1=v[<span class="hljs-number">0</span>].R;
+                        v.clear();
+                        query(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,r1,r2);
+                        ans2=v[<span class="hljs-number">0</span>].L;
+                        ans=max(ans,ans1+ans2-a[r1]);<span class="hljs-comment">//2</span>
+                        v.clear();
+                        query(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,l1,l2);
+                        ans1=v[<span class="hljs-number">0</span>].R;
+                        v.clear();
+                        query(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,l2,r2);
+                        ans2=v[<span class="hljs-number">0</span>].L;
+                        ans=max(ans,ans1+ans2-a[l2]);<span class="hljs-comment">//1</span>
+                        <span class="hljs-built_in">cout</span>&lt;&lt;ans&lt;&lt;<span class="hljs-string">'\n'</span>;
+                    }
+                }
+            }
+            <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+        }
+        </code></pre>
+        <h3 id="gss6">GSS6</h3>
+        <p> 平衡树维护最大字段和板子，总的来说跟GSS1一样，用FHQ Treap维护插入删除（按子树大小分裂）就可以了，不过需要注意的是合并是由 $x,lson[x],rson[x]$ 三个部分合并，同时还要注意节点0对于答案的影响。</p>
+        <pre><code class="lang-cpp">#include&lt;bits/stdc++.h&gt;
+        #define int long long
+        using namespace std;
+        const int N=<span class="hljs-number">2</span>e5+<span class="hljs-number">10</span>;
+        int n,q,a[N],cnt,root;
+        struct TREE{
+            int s,mx,L,R,rd,ls,rs,sum,val;
+        }<span class="hljs-keyword">tree</span>[N];
+        void update(int x)
+        {
+            <span class="hljs-keyword">tree</span>[x].sum=<span class="hljs-keyword">tree</span>[x].val+<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].ls].sum+<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].rs].sum;
+            <span class="hljs-keyword">tree</span>[x].s=<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].ls].s+<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].rs].s+<span class="hljs-number">1</span>;
+            <span class="hljs-keyword">tree</span>[x].L=max(<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].ls].L,max(<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].ls].sum+<span class="hljs-keyword">tree</span>[x].val,<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].ls].sum+<span class="hljs-keyword">tree</span>[x].val+<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].rs].L));
+            <span class="hljs-keyword">tree</span>[x].R=max(<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].rs].R,max(<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].rs].sum+<span class="hljs-keyword">tree</span>[x].val,<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].rs].sum+<span class="hljs-keyword">tree</span>[x].val+<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].ls].R));
+            <span class="hljs-keyword">tree</span>[x].mx=max(max(<span class="hljs-keyword">tree</span>[x].L,<span class="hljs-keyword">tree</span>[x].R),max(max(<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].ls].mx,<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].rs].mx),<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].ls].R+<span class="hljs-keyword">tree</span>[x].val+<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].rs].L));
+            <span class="hljs-keyword">tree</span>[x].mx=max(<span class="hljs-keyword">tree</span>[x].mx,max(<span class="hljs-keyword">tree</span>[x].val,max(<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].ls].R+<span class="hljs-keyword">tree</span>[x].val,<span class="hljs-keyword">tree</span>[x].val+<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[x].rs].L)));
+            return;
+        }
+        int nd(int v)
+        {
+            cnt++;
+            <span class="hljs-keyword">tree</span>[cnt].L=<span class="hljs-keyword">tree</span>[cnt].R=<span class="hljs-keyword">tree</span>[cnt].mx=<span class="hljs-keyword">tree</span>[cnt].sum=<span class="hljs-keyword">tree</span>[cnt].val=v;
+            <span class="hljs-keyword">tree</span>[cnt].rd=rand();
+            <span class="hljs-keyword">tree</span>[cnt].s=<span class="hljs-number">1</span>;
+            return cnt;
+        }
+        void split(int nw,int k,int &amp;x,int &amp;y)
+        {
+            <span class="hljs-keyword">if</span>(nw==<span class="hljs-number">0</span>)
+            {
+                x=y=<span class="hljs-number">0</span>;
+                return;
+            }
+            <span class="hljs-keyword">if</span>(k&gt;<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[nw].ls].s)
+            {
+                x=nw;
+                split(<span class="hljs-keyword">tree</span>[nw].rs,k-<span class="hljs-keyword">tree</span>[<span class="hljs-keyword">tree</span>[nw].ls].s-<span class="hljs-number">1</span>,<span class="hljs-keyword">tree</span>[nw].rs,y);
+            }
+            <span class="hljs-keyword">else</span>
+            {
+                y=nw;
+                split(<span class="hljs-keyword">tree</span>[nw].ls,k,x,<span class="hljs-keyword">tree</span>[nw].ls);
+            }
+            update(nw);
+            return;
+        }
+        int merge(int x,int y)
+        {
+            <span class="hljs-keyword">if</span>(x==<span class="hljs-number">0</span>||y==<span class="hljs-number">0</span>)
+            return x|y;
+            <span class="hljs-keyword">if</span>(<span class="hljs-keyword">tree</span>[x].rd&lt;<span class="hljs-keyword">tree</span>[y].rd)
+            {
+                <span class="hljs-keyword">tree</span>[x].rs=merge(<span class="hljs-keyword">tree</span>[x].rs,y);
+                update(x);
+                return x;
+            }
+            <span class="hljs-keyword">else</span>
+            {
+                <span class="hljs-keyword">tree</span>[y].ls=merge(x,<span class="hljs-keyword">tree</span>[y].ls);
+                update(y);
+                return y;
+            }
+        }
+        signed main()
+        {
+            ios::sync_with_stdio(<span class="hljs-number">0</span>);
+            cin.tie(<span class="hljs-number">0</span>),cout.tie(<span class="hljs-number">0</span>);
+            srand(<span class="hljs-built_in">time</span>(<span class="hljs-number">0</span>));
+            <span class="hljs-keyword">tree</span>[<span class="hljs-number">0</span>].L=<span class="hljs-keyword">tree</span>[<span class="hljs-number">0</span>].R=<span class="hljs-keyword">tree</span>[<span class="hljs-number">0</span>].mx=<span class="hljs-keyword">tree</span>[<span class="hljs-number">0</span>].val=-<span class="hljs-number">1</span>e9;
+            cin&gt;&gt;n;
+            <span class="hljs-keyword">for</span>(int i=<span class="hljs-number">1</span>;i&lt;=n;i++)
+            {
+                cin&gt;&gt;a[i];
+                <span class="hljs-keyword">if</span>(i==<span class="hljs-number">1</span>)
+                root=nd(a[<span class="hljs-number">1</span>]);
+                <span class="hljs-keyword">else</span>
+                root=merge(root,nd(a[i]));
+            }
+            cin&gt;&gt;q;
+            <span class="hljs-keyword">while</span>(q--)
+            {
+                char op;
+                cin&gt;&gt;op;
+                <span class="hljs-keyword">if</span>(op==<span class="hljs-string">'I'</span>)
+                {
+                    int p,v;
+                    cin&gt;&gt;p&gt;&gt;v;
+                    int x=<span class="hljs-number">0</span>,y=<span class="hljs-number">0</span>;
+                    split(root,p-<span class="hljs-number">1</span>,x,y);
+                    root=merge(merge(x,nd(v)),y);
+                }
+                <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(op==<span class="hljs-string">'D'</span>)
+                {
+                    int p;
+                    cin&gt;&gt;p;
+                    int x=<span class="hljs-number">0</span>,y=<span class="hljs-number">0</span>,z=<span class="hljs-number">0</span>;
+                    split(root,p,x,z);
+                    split(x,p-<span class="hljs-number">1</span>,x,y);
+                    root=merge(x,z);
+                }
+                <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(op==<span class="hljs-string">'R'</span>)
+                {
+                    int p,v;
+                    cin&gt;&gt;p&gt;&gt;v;
+                    int x=<span class="hljs-number">0</span>,y=<span class="hljs-number">0</span>,z=<span class="hljs-number">0</span>;
+                    split(root,p,x,z);
+                    split(x,p-<span class="hljs-number">1</span>,x,y);
+                    root=merge(x,z);
+                    x=<span class="hljs-number">0</span>,y=<span class="hljs-number">0</span>;
+                    split(root,p-<span class="hljs-number">1</span>,x,y);
+                    root=merge(merge(x,nd(v)),y);
+                }
+                <span class="hljs-keyword">else</span>
+                {
+                    int l,r;
+                    cin&gt;&gt;l&gt;&gt;r;
+                    int x=<span class="hljs-number">0</span>,y=<span class="hljs-number">0</span>,z=<span class="hljs-number">0</span>;
+                    split(root,l-<span class="hljs-number">1</span>,x,y);
+                    split(y,r-l+<span class="hljs-number">1</span>,y,z);
+                    cout<span class="hljs-string">&lt;&lt;tree[y].mx&lt;&lt;'\n';
+                    root=merge(merge(x,y),z);
+                }
+            }
+            return 0;
+        }</span>
+        </code></pre>
+        <h3 id="gss7">GSS7</h3>
+        <p>对于修改，题目良心地给出了可以为空的性质，那么对于负的修改，区间的最大字段和，最大前后缀和显然都为空最优，反之全选。</p>
+        <p>大力书剖再合并答案就可以了，不过合并顺序并不传统，可以画图理解。</p>
+        <p>首先一条重链内部从上到下的答案在线段树上是正序的，一条从 $x$ 到 $lca(x,y)$ 和 $y$ 到 $lca(x,y)$ 的路径上的答案从下到上是倒序的，一条从 $x$ 到 $y$ 的路径上的答案从 $x$ 到 $lca(x,y)$ 的部分是倒序的，讲的很抽象，不知道读者是否理解，反正小编是理解了。 </p>
+        <pre><code class="lang-cpp">#include&lt;bits/stdc++.h&gt;
+        using namespace std;
+        const int <span class="hljs-symbol">N</span>=<span class="hljs-number">1e5</span>+<span class="hljs-number">10</span>;
+        int n,a[<span class="hljs-symbol">N</span>],q,<span class="hljs-symbol">FA</span>[<span class="hljs-symbol">N</span>],z[<span class="hljs-symbol">N</span>],s[<span class="hljs-symbol">N</span>],d[<span class="hljs-symbol">N</span>],tp[<span class="hljs-symbol">N</span>],<span class="hljs-symbol">L</span>[<span class="hljs-symbol">N</span>],<span class="hljs-symbol">R</span>[<span class="hljs-symbol">N</span>],deep,from[<span class="hljs-symbol">N</span>];
+        struct <span class="hljs-symbol">TREE</span>{
+            int <span class="hljs-symbol">L</span>,<span class="hljs-symbol">R</span>,mx,sum,tag,len;
+        }tree[<span class="hljs-symbol">N</span>*<span class="hljs-number">4</span>];
+        vector&lt;int&gt;edge[<span class="hljs-symbol">N</span>];
+        vector&lt;<span class="hljs-symbol">TREE</span>&gt;vv;
+        vector&lt;<span class="hljs-symbol">TREE</span>&gt;v[<span class="hljs-number">2</span>];
+        void dfs1(int x,int fa)
+        {
+            s[x]=<span class="hljs-number">1</span>;
+            d[x]=d[fa]+<span class="hljs-number">1</span>;
+            <span class="hljs-symbol">FA</span>[x]=fa;
+            int mx=<span class="hljs-number">0</span>;
+            for(int i=<span class="hljs-number">0</span>;i&lt;edge[x].size();i++)
+            {
+                int to=edge[x][i];
+                if(to==fa)
+                continue;
+                dfs1(to,x);
+                s[x]+=s[to];
+                if(s[to]&gt;mx)
+                {
+                    mx=s[to];
+                    z[x]=to;
+                }
+            }
+            return;
+        }
+        void dfs2(int x,int fa,int old)
+        {
+            tp[x]=old;
+            <span class="hljs-symbol">L</span>[x]=++deep;
+            from[<span class="hljs-symbol">L</span>[x]]=x;
+            if(z[x]!=<span class="hljs-number">0</span>)
+            dfs2(z[x],x,old);
+            for(int i=<span class="hljs-number">0</span>;i&lt;edge[x].size();i++)
+            {
+                int to=edge[x][i];
+                if(to==fa||to==z[x])
+                continue;
+                dfs2(to,x,to);
+            }
+            <span class="hljs-symbol">R</span>[x]=deep;
+            return;
+        }
+        int lson(int l,int r)
+        {
+            return (l+r)/<span class="hljs-number">2</span>;
+        }
+        int rson(int l,int r)
+        {
+            return (l+r)/<span class="hljs-number">2</span>+<span class="hljs-number">1</span>;
+        }
+        <span class="hljs-symbol">TREE</span> merge(<span class="hljs-symbol">TREE</span> x,<span class="hljs-symbol">TREE</span> y)
+        {
+            <span class="hljs-symbol">TREE</span> nw={<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>};
+            nw.sum=x.sum+y.sum;
+            nw.<span class="hljs-symbol">L</span>=max(x.<span class="hljs-symbol">L</span>,x.sum+y.<span class="hljs-symbol">L</span>);
+            nw.<span class="hljs-symbol">R</span>=max(y.<span class="hljs-symbol">R</span>,y.sum+x.<span class="hljs-symbol">R</span>);
+            nw.mx=max(max(x.mx,y.mx),max(nw.<span class="hljs-symbol">L</span>,nw.<span class="hljs-symbol">R</span>));
+            nw.mx=max(max(nw.mx,x.<span class="hljs-symbol">R</span>+y.<span class="hljs-symbol">L</span>),max(x.<span class="hljs-symbol">R</span>,y.<span class="hljs-symbol">L</span>));
+            nw.mx=max(<span class="hljs-number">0</span>,nw.mx);
+            nw.<span class="hljs-symbol">L</span>=max(<span class="hljs-number">0</span>,nw.<span class="hljs-symbol">L</span>);
+            nw.<span class="hljs-symbol">R</span>=max(<span class="hljs-number">0</span>,nw.<span class="hljs-symbol">R</span>);
+            return nw;
+        }
+        void pushdown(int x)
+        {
+            if(tree[x].tag==<span class="hljs-symbol">INT_MIN</span>)
+            return;
+            tree[x*<span class="hljs-number">2</span>].tag=tree[x].tag;
+            tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].tag=tree[x].tag;
+            tree[x*<span class="hljs-number">2</span>].<span class="hljs-symbol">L</span>=tree[x*<span class="hljs-number">2</span>].<span class="hljs-symbol">R</span>=tree[x*<span class="hljs-number">2</span>].mx=max(<span class="hljs-number">0</span>,tree[x*<span class="hljs-number">2</span>].len*tree[x].tag);
+            tree[x*<span class="hljs-number">2</span>].sum=tree[x*<span class="hljs-number">2</span>].len*tree[x].tag;
+            tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].<span class="hljs-symbol">L</span>=tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].<span class="hljs-symbol">R</span>=tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].mx=max(<span class="hljs-number">0</span>,tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].len*tree[x].tag);
+            tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].sum=tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>].len*tree[x].tag;
+            tree[x].tag=<span class="hljs-symbol">INT_MIN</span>;
+            return;
+        }
+        void build(int l,int r,int x)
+        {
+            tree[x].tag=<span class="hljs-symbol">INT_MIN</span>;
+            tree[x].len=r-l+<span class="hljs-number">1</span>;
+            if(l==r)
+            {
+                tree[x].<span class="hljs-symbol">L</span>=tree[x].<span class="hljs-symbol">R</span>=tree[x].mx=max(a[from[l]],<span class="hljs-number">0</span>);
+                tree[x].sum=a[from[l]];
+                return;    
+            }
+            build(l,lson(l,r),x*<span class="hljs-number">2</span>);
+            build(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>);
+            int lst1=tree[x].len;
+            int lst2=tree[x].tag;
+            tree[x]=merge(tree[x*<span class="hljs-number">2</span>],tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>]);
+            tree[x].len=lst1;
+            tree[x].tag=lst2;
+            return;
+        }
+        void query(int l,int r,int x,int l1,int r1)
+        {
+            if(l&gt;=l1&amp;&amp;r&lt;=r1)
+            {
+                if(vv.size()==<span class="hljs-number">0</span>)
+                vv.push_back(tree[x]);
+                else
+                {
+                    <span class="hljs-symbol">TREE</span> node=vv[<span class="hljs-number">0</span>];
+                    vv.pop_back();
+                    vv.push_back(merge(node,tree[x]));
+                }
+                return;
+            }
+            pushdown(x);
+            if(lson(l,r)&gt;=l1)
+            query(l,lson(l,r),x*<span class="hljs-number">2</span>,l1,r1);
+            if(rson(l,r)&lt;=r1)
+            query(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>,l1,r1);
+            int lst1=tree[x].len;
+            int lst2=tree[x].tag;
+            tree[x]=merge(tree[x*<span class="hljs-number">2</span>],tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>]);
+            tree[x].len=lst1;
+            tree[x].tag=lst2;
+            return;
+        }
+        void change(int l,int r,int x,int l1,int r1,int to)
+        {
+            if(l&gt;=l1&amp;&amp;r&lt;=r1)
+            {
+                if(to&gt;<span class="hljs-number">0</span>)
+                {
+                    tree[x].<span class="hljs-symbol">L</span>=tree[x].mx=tree[x].<span class="hljs-symbol">R</span>=tree[x].sum=tree[x].len*to;
+                    tree[x].tag=to;
+                }
+                else
+                {
+                    tree[x].<span class="hljs-symbol">L</span>=tree[x].<span class="hljs-symbol">R</span>=tree[x].mx=<span class="hljs-number">0</span>;
+                    tree[x].tag=to;
+                    tree[x].sum=tree[x].len*to;
+                }
+                return;
+            }
+            pushdown(x);
+            if(lson(l,r)&gt;=l1)
+            change(l,lson(l,r),x*<span class="hljs-number">2</span>,l1,r1,to);
+            if(rson(l,r)&lt;=r1)
+            change(rson(l,r),r,x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>,l1,r1,to);
+            int lst1=tree[x].len;
+            int lst2=tree[x].tag;
+            tree[x]=merge(tree[x*<span class="hljs-number">2</span>],tree[x*<span class="hljs-number">2</span>+<span class="hljs-number">1</span>]);
+            tree[x].len=lst1;
+            tree[x].tag=lst2;
+            return;
+        }
+        void solve1(int x,int y)
+        {
+            int f1=<span class="hljs-number">0</span>,f2=<span class="hljs-number">1</span>;
+            while(tp[x]!=tp[y])
+            {
+                if(d[tp[x]]&lt;d[tp[y]])
+                swap(x,y),swap(f1,f2);
+                vv.clear();
+                query(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,<span class="hljs-symbol">L</span>[tp[x]],<span class="hljs-symbol">L</span>[x]);
+                x=<span class="hljs-symbol">FA</span>[tp[x]];
+                if(v[f1].size()==<span class="hljs-number">0</span>)
+                v[f1].push_back(vv[<span class="hljs-number">0</span>]);
+                else
+                {
+                    v[f1][<span class="hljs-number">0</span>]=merge(vv[<span class="hljs-number">0</span>],v[f1][<span class="hljs-number">0</span>]);
+                }
+            }
+            if(d[x]&lt;d[y])
+            swap(x,y),swap(f1,f2);
+            vv.clear();
+            query(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,<span class="hljs-symbol">L</span>[y],<span class="hljs-symbol">L</span>[x]);
+            if(v[f1].size()==<span class="hljs-number">0</span>)
+            v[f1].push_back(vv[<span class="hljs-number">0</span>]);
+            else
+            {
+                v[f1][<span class="hljs-number">0</span>]=merge(vv[<span class="hljs-number">0</span>],v[f1][<span class="hljs-number">0</span>]);
+            }
+            if(v[<span class="hljs-number">1</span>].size()==<span class="hljs-number">0</span>)
+            v[<span class="hljs-number">1</span>].push_back(v[<span class="hljs-number">0</span>][<span class="hljs-number">0</span>]);
+            else if(v[<span class="hljs-number">0</span>].size()!=<span class="hljs-number">0</span>)
+            {
+                swap(v[<span class="hljs-number">0</span>][<span class="hljs-number">0</span>].<span class="hljs-symbol">L</span>,v[<span class="hljs-number">0</span>][<span class="hljs-number">0</span>].<span class="hljs-symbol">R</span>);
+                v[<span class="hljs-number">1</span>][<span class="hljs-number">0</span>]=merge(v[<span class="hljs-number">0</span>][<span class="hljs-number">0</span>],v[<span class="hljs-number">1</span>][<span class="hljs-number">0</span>]);
+            }
+            return;
+        }
+        void solve2(int x,int y,int w)
+        {
+            while(tp[x]!=tp[y])
+            {
+                if(d[tp[x]]&lt;d[tp[y]])
+                swap(x,y);
+                change(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,<span class="hljs-symbol">L</span>[tp[x]],<span class="hljs-symbol">L</span>[x],w);
+                x=<span class="hljs-symbol">FA</span>[tp[x]];
+            }
+            if(d[x]&lt;d[y])
+            swap(x,y);
+            change(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>,<span class="hljs-symbol">L</span>[y],<span class="hljs-symbol">L</span>[x],w);
+            return;
+        }
+        int main()
+        {
+            ios::sync_with_stdio(<span class="hljs-number">0</span>);
+            cin.tie(<span class="hljs-number">0</span>),cout.tie(<span class="hljs-number">0</span>);
+            cin&gt;&gt;n;
+            for(int i=<span class="hljs-number">1</span>;i&lt;=n;i++)
+            {
+                cin&gt;&gt;a[i];
+            }
+            for(int i=<span class="hljs-number">1</span>;i&lt;n;i++)
+            {
+                int u,v;
+                cin&gt;&gt;u&gt;&gt;v;
+                edge[u].push_back(v);    
+                edge[v].push_back(u);
+            }
+            dfs1(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>);
+            dfs2(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+            build(<span class="hljs-number">1</span>,n,<span class="hljs-number">1</span>);
+            cin&gt;&gt;q;
+            while(q--)
+            {
+                int op;
+                cin&gt;&gt;op;
+                if(op==<span class="hljs-number">1</span>)
+                {
+                    int x,y;
+                    cin&gt;&gt;x&gt;&gt;y;
+                    v[<span class="hljs-number">0</span>].clear();
+                    v[<span class="hljs-number">1</span>].clear();
+                    solve1(x,y);
+                    cout&lt;&lt;v[<span class="hljs-number">1</span>][<span class="hljs-number">0</span>].mx&lt;&lt;<span class="hljs-string">'\n'</span>;
+                }
+                else
+                {
+                    int u,v,w;
+                    cin&gt;&gt;u&gt;&gt;v&gt;&gt;w;
+                    solve2(u,v,w);
+                }
+            }
+            return <span class="hljs-number">0</span>;
+        }
+        </code></pre>
+        //
+        <div style="
+            background-color:#f1f1f1;
+            text-align: center;
+            padding: 40px;
+            font-size: 12px;
+            " 
+            width=auto height=auto >
+        <p style="
+            text-align: right;
+            ">
+            writen by sunlight
+        </p>
+        </div>
+    </body>
+</html>
